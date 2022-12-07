@@ -3,18 +3,8 @@ package day7
 import (
   "os"
   "strings"
-  "fmt"
   "strconv"
 )
-
-func contains[T comparable](s []T, e T) bool {
-    for _, v := range s {
-        if v == e {
-            return true
-        }
-    }
-    return false
-}
 
 func calcSumOfDirSizesLessThanCriteria (dirSizeMap map[string]int, criteria int) int {
   var sum int
@@ -24,6 +14,16 @@ func calcSumOfDirSizesLessThanCriteria (dirSizeMap map[string]int, criteria int)
     }
   }
   return sum
+}
+
+func findSmallestDirLargerThanCriteria (dirSizeMap map[string]int, criteria int) int {
+  smallestDirSize := int(^uint(0)  >> 1)
+  for _, element := range dirSizeMap {
+    if element >= criteria && element <= smallestDirSize{
+      smallestDirSize = element
+    }
+  }
+  return smallestDirSize
 }
 
 func Part1(fileName string) int{
@@ -36,30 +36,52 @@ func Part1(fileName string) int{
 
   dirs := make(map[string]int)
   var currentDir []string
-  var searchedPaths []string
-  var newDir bool
   for _, line := range splitString[0: len(splitString)-1] {
     splitLine := strings.Split(line, " ")
-    currentDirString := strings.Join(currentDir, "/")
     if splitLine[1] == "cd" && splitLine[2] != ".." {
       currentDir = append(currentDir, splitLine[2])
-      newDir = false
     } else if splitLine[1] == "cd" && splitLine[2] == ".." {
       currentDir = currentDir[0:len(currentDir)-1]
-      newDir = false
-    } else if splitLine[1] == "ls" && !contains(searchedPaths, currentDirString){
-      searchedPaths = append(searchedPaths, currentDirString)
-      newDir = true
-    } else if newDir {
+    } else {
       intFirstValue, err := strconv.Atoi(splitLine[0])
       if err == nil {
         for index, _ := range currentDir {
           fullFilePath := strings.Join(currentDir[0:index+1], "/")
-          dirs[fullFilePath] = dirs[fullFilePath] + intFirstValue
+          dirs[fullFilePath] += intFirstValue
         }
       }
     }
   }
-  fmt.Println(dirs)
   return calcSumOfDirSizesLessThanCriteria(dirs, 100000)
+}
+
+
+func Part2(fileName string) int{
+  dat,err := os.ReadFile(fileName)
+  if err != nil {
+    panic(err)
+  }
+
+  splitString := strings.Split(string(dat), "\n")
+
+  dirs := make(map[string]int)
+  var currentDir []string
+  for _, line := range splitString[0: len(splitString)-1] {
+    splitLine := strings.Split(line, " ")
+    if splitLine[1] == "cd" && splitLine[2] != ".." {
+      currentDir = append(currentDir, splitLine[2])
+    } else if splitLine[1] == "cd" && splitLine[2] == ".." {
+      currentDir = currentDir[0:len(currentDir)-1]
+    } else {
+      intFirstValue, err := strconv.Atoi(splitLine[0])
+      if err == nil {
+        for index, _ := range currentDir {
+          fullFilePath := strings.Join(currentDir[0:index+1], "/")
+          dirs[fullFilePath] += intFirstValue
+        }
+      }
+    }
+  }
+  requiredSpace := 30000000 - (70000000 - dirs["/"])
+  return findSmallestDirLargerThanCriteria(dirs, requiredSpace)
 }
